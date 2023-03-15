@@ -1,5 +1,6 @@
 package com.example.restapiinflearn.event;
 
+import com.example.restapiinflearn.common.TestDescription;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -34,6 +35,7 @@ public class EventControllerTests {
     /*@MockBean // 2. Repository 등록
     EventRepository eventRepository;*/
     @Test
+    @TestDescription("정상적으로 입력할 수 없는 값을 사용한 경우에 에러가 발생하는 테스트")
     public void createEvent() throws Exception{
         Event event = Event.builder()
                 .id(100)
@@ -66,6 +68,7 @@ public class EventControllerTests {
      * @throws Exception
      */
     @Test
+    @TestDescription("입력 값이 비어있는 경우에 에러가 발생하는 테스트")
     public void createEvent_Bad_Request_Empty_Input() throws Exception {
         EventDto eventDto = EventDto.builder().build();
 
@@ -75,5 +78,28 @@ public class EventControllerTests {
                 )
                 .andExpect(status().isBadRequest());
     }
-
+    @Test
+    @TestDescription("입력 값이 잘못된 경우에 에러가 발생하는 테스트")
+    public void createEvent_Bad_Request_Wrong_Input() throws Exception{
+        Event event = Event.builder()
+                .name("Spring")
+                .description("REST API Development")
+                .beginEnrollmentDateTime(LocalDateTime.of(2023,12,12,00,00))
+                .closeEnrollmentDateTime(LocalDateTime.of(2023,12,10,01,00))
+                .beginEventDateTime(LocalDateTime.of(2023,12,12,00,20))
+                .endEventDateTime(LocalDateTime.of(2023,12,10,00,40))
+                .basePrice(10000)
+                .maxPrice(200)
+                .limitOfEnrollment(100)
+                .location("강남역")
+                .build();
+        //Mockito.when(eventRepository.save(event)).thenReturn(event);
+        mockMvc.perform(post("/api/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaTypes.HAL_JSON)
+                        .content(objectMapper.writeValueAsString(event))
+                ).andDo(print())
+                .andExpect(status().isBadRequest())
+        ;
+    }
 }
