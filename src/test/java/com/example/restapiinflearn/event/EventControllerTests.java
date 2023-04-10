@@ -36,7 +36,7 @@ public class EventControllerTests {
     EventRepository eventRepository;*/
     @Test
     @TestDescription("정상적으로 입력할 수 없는 값을 사용한 경우에 에러가 발생하는 테스트")
-    public void createEvent() throws Exception{
+    public void createEvent_with_wrongValues() throws Exception{
         Event event = Event.builder()
                 .id(100)
                         .name("Spring")
@@ -81,7 +81,8 @@ public class EventControllerTests {
     @Test
     @TestDescription("입력 값이 잘못된 경우에 에러가 발생하는 테스트")
     public void createEvent_Bad_Request_Wrong_Input() throws Exception{
-        Event event = Event.builder()
+        //Event event = Event.builder()
+        EventDto eventDto = EventDto.builder()
                 .name("Spring")
                 .description("REST API Development")
                 .beginEnrollmentDateTime(LocalDateTime.of(2023,12,12,00,00))
@@ -96,10 +97,50 @@ public class EventControllerTests {
         //Mockito.when(eventRepository.save(event)).thenReturn(event);
         mockMvc.perform(post("/api/events")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaTypes.HAL_JSON)
-                        .content(objectMapper.writeValueAsString(event))
-                ).andDo(print())
+                        //.accept(MediaTypes.HAL_JSON)
+                        .content(objectMapper.writeValueAsString(eventDto))
+                )//.andDo(print())
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$[0].objectName").exists())
+                .andExpect(jsonPath("$[0].field").exists())
+                .andExpect(jsonPath("$[0].defaultMessage").exists())
+                .andExpect(jsonPath("$[0].code").exists())
+                .andExpect(jsonPath("$[0].rejectedValue").exists())
+                .andDo(print())
+        ;
+    }
+    @Test
+    @TestDescription("정상적으로 이벤트를 생성하는 테스트")
+    public void createEvent() throws Exception{
+        //Event event = Event.builder()
+        EventDto eventDto = EventDto.builder()
+                .name("Spring")
+                .description("REST API Development")
+                .beginEnrollmentDateTime(LocalDateTime.of(2023,12,10,00,00))
+                .closeEnrollmentDateTime(LocalDateTime.of(2023,12,10,00,00))
+                .beginEventDateTime(LocalDateTime.of(2023,12,10,00,00))
+                .endEventDateTime(LocalDateTime.of(2023,12,10,01,40))
+                .basePrice(0)
+                .maxPrice(200)
+                .limitOfEnrollment(200)
+                .location("강남역")
+                .build();
+        //Mockito.when(eventRepository.save(event)).thenReturn(event);
+        mockMvc.perform(post("/api/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaTypes.HAL_JSON)
+                        .content(objectMapper.writeValueAsString(eventDto))
+                ).andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(header().exists(HttpHeaders.LOCATION))
+                .andExpect(header().string(HttpHeaders.CONTENT_TYPE,MediaTypes.HAL_JSON_VALUE))
+                .andExpect(jsonPath("id").exists())
+                .andExpect(jsonPath("free").value(false))
+                .andExpect(jsonPath("offline").value(true))
+                .andExpect(jsonPath("eventStatus").value(EventStatus.DRAFT.name()))
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.query-events").exists())
+                .andExpect(jsonPath("_links.update-event").exists())
         ;
     }
 }
