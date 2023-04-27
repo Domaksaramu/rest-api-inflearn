@@ -1,24 +1,36 @@
 package com.example.restapiinflearn.event;
 
+import com.example.restapiinflearn.common.RestDocsConfiguration;
 import com.example.restapiinflearn.common.TestDescription;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.stream.IntStream;
 
+import static org.springframework.restdocs.headers.HeaderDocumentation.*;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -27,13 +39,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 //@WebMvcTest // 1.Web 관련 라이브러리만 Bean으로 등록해줌, SlicingTest
 @SpringBootTest
 @AutoConfigureMockMvc
+@AutoConfigureRestDocs
+@Import(RestDocsConfiguration.class)
+@ActiveProfiles("test")
 public class EventControllerTests {
     @Autowired
     MockMvc mockMvc;
     @Autowired
     ObjectMapper objectMapper;
-    /*@MockBean // 2. Repository 등록
-    EventRepository eventRepository;*/
+    @Autowired // 2. Repository 등록
+    EventRepository eventRepository;
+
+    @Autowired
+    ModelMapper modelMapper;
     @Test
     @TestDescription("정상적으로 입력할 수 없는 값을 사용한 경우에 에러가 발생하는 테스트")
     public void createEvent_with_wrongValues() throws Exception{
@@ -101,11 +119,12 @@ public class EventControllerTests {
                         .content(objectMapper.writeValueAsString(eventDto))
                 )//.andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$[0].objectName").exists())
-                .andExpect(jsonPath("$[0].field").exists())
-                .andExpect(jsonPath("$[0].defaultMessage").exists())
-                .andExpect(jsonPath("$[0].code").exists())
-                .andExpect(jsonPath("$[0].rejectedValue").exists())
+                .andExpect(jsonPath("errors[0].objectName").exists())
+                .andExpect(jsonPath("errors[0].field").exists())
+                .andExpect(jsonPath("errors[0].defaultMessage").exists())
+                .andExpect(jsonPath("errors[0].code").exists())
+                .andExpect(jsonPath("errors[0].rejectedValue").exists())
+                .andExpect(jsonPath("_links.index").exists())
                 .andDo(print())
         ;
     }
@@ -141,6 +160,118 @@ public class EventControllerTests {
                 .andExpect(jsonPath("_links.self").exists())
                 .andExpect(jsonPath("_links.query-events").exists())
                 .andExpect(jsonPath("_links.update-event").exists())
+                .andDo(document("create-event",
+                        links(
+                                linkWithRel("self").description("link to self"),
+                                linkWithRel("query-events").description("link to query events"),
+                                linkWithRel("update-event").description("link to update event"),
+                                linkWithRel("profile").description("link to profile")
+                        ),
+                        requestHeaders(
+                                headerWithName(HttpHeaders.ACCEPT).description("accept header"),
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("content header")
+                        ),
+                        requestFields(
+                                fieldWithPath("name").description("Name of new event"),
+                                fieldWithPath("description").description("Description of new event"),
+                                fieldWithPath("beginEnrollmentDateTime").description("Date time of begin of new event"),
+                                fieldWithPath("closeEnrollmentDateTime").description("Date time of close of new event"),
+                                fieldWithPath("beginEventDateTime").description("Date time of begin of new event"),
+                                fieldWithPath("endEventDateTime").description("Date time of close of new event"),
+                                fieldWithPath("location").description("location of new event"),
+                                fieldWithPath("basePrice").description("basePrice of new event"),
+                                fieldWithPath("maxPrice").description("maxPrice of new event"),
+                                fieldWithPath("limitOfEnrollment").description("limit of enrollment of new event")
+
+                        ),
+                        responseHeaders(
+                                headerWithName(HttpHeaders.LOCATION).description("location header"),
+                                headerWithName(HttpHeaders.CONTENT_TYPE).description("content header")
+                        ),
+                        responseFields(
+                                fieldWithPath("id").description("id of new event"),
+                                fieldWithPath("name").description("Name of new event"),
+                                fieldWithPath("description").description("Description of new event"),
+                                fieldWithPath("beginEnrollmentDateTime").description("Date time of begin of new event"),
+                                fieldWithPath("closeEnrollmentDateTime").description("Date time of close of new event"),
+                                fieldWithPath("beginEventDateTime").description("Date time of begin of new event"),
+                                fieldWithPath("endEventDateTime").description("Date time of close of new event"),
+                                fieldWithPath("location").description("location of new event"),
+                                fieldWithPath("basePrice").description("basePrice of new event"),
+                                fieldWithPath("maxPrice").description("maxPrice of new event"),
+                                fieldWithPath("limitOfEnrollment").description("limit of enrollment of new event"),
+                                fieldWithPath("free").description("free of new event"),
+                                fieldWithPath("offline").description("offline of new event"),
+                                fieldWithPath("eventStatus").description("event status of new event"),
+                                fieldWithPath("_links.self.href").description("link to self"),
+                                fieldWithPath("_links.query-events.href").description("link to query events"),
+                                fieldWithPath("_links.update-event.href").description("link to update event"),
+                                fieldWithPath("_links.profile.href").description("link to profile")
+
+                        )
+                ));
+
         ;
+    }
+    @Test
+    @TestDescription("30개의 이벤트중 10개씩 2번째 페이지 조회")
+    public void queryEvents() throws Exception{
+        //given
+        IntStream.range(0,30).forEach(i->{
+            this.generateEvent(i);
+        });
+        //when
+        this.mockMvc.perform(get("/api/events")
+                .param("page", "1")
+                .param("size","10")
+                .param("sort","name,DESC"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("page").exists())
+                .andExpect(jsonPath("_embedded.eventList[0]._links.self").exists())
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.profile").exists())
+                .andDo(document("query-events"))
+                ;
+    }
+
+    private Event generateEvent(int i) {
+        Event event = Event.builder()
+                .name("event " + String.format("%02d", i))
+                .description("test event")
+                .build();
+        return this.eventRepository.save(event);
+    }
+
+    @Test
+    @TestDescription("기존의 이벤트를 하나 조회하기")
+    public void getEvent() throws Exception{
+        Event event = this.generateEvent(100);
+        this.mockMvc.perform(get("/api/events/{id}", event.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("name").exists())
+                .andExpect(jsonPath("id").exists())
+                .andExpect(jsonPath("_links.self").exists())
+                .andExpect(jsonPath("_links.profile").exists())
+                ;
+    }
+    @Test
+    @TestDescription("없는 이벤트를 조회했을 때 404 응답 받기")
+    public void getEvent404() throws Exception{
+        this.mockMvc.perform(get("/api/events/12344"))
+                .andExpect(status().isNotFound())
+        ;
+    }
+
+    @Test
+    @TestDescription("데이터 수정 이벤트")
+    public void updateEvent(){
+        //given
+        Event event = this.generateEvent(200);
+        EventDto eventDto = this.modelMapper.map(event, EventDto.class);
+        eventDto.setName("Updated Name");
+
+        //when
+
     }
 }
