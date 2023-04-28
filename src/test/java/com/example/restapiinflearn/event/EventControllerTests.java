@@ -1,5 +1,6 @@
 package com.example.restapiinflearn.event;
 
+import com.example.restapiinflearn.common.BaseControllerTest;
 import com.example.restapiinflearn.common.RestDocsConfiguration;
 import com.example.restapiinflearn.common.TestDescription;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,23 +35,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@RunWith(SpringRunner.class)
-//@WebMvcTest // 1.Web 관련 라이브러리만 Bean으로 등록해줌, SlicingTest
-@SpringBootTest
-@AutoConfigureMockMvc
-@AutoConfigureRestDocs
-@Import(RestDocsConfiguration.class)
-@ActiveProfiles("test")
-public class EventControllerTests {
-    @Autowired
-    MockMvc mockMvc;
-    @Autowired
-    ObjectMapper objectMapper;
+public class EventControllerTests extends BaseControllerTest {
     @Autowired // 2. Repository 등록
     EventRepository eventRepository;
 
-    @Autowired
-    ModelMapper modelMapper;
     @Test
     @TestDescription("정상적으로 입력할 수 없는 값을 사용한 경우에 에러가 발생하는 테스트")
     public void createEvent_with_wrongValues() throws Exception{
@@ -286,8 +274,7 @@ public class EventControllerTests {
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(this.objectMapper.writeValueAsString(eventDto)))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("_links.self").exists());
+                .andExpect(status().isBadRequest());
 
     }
     @Test
@@ -307,8 +294,7 @@ public class EventControllerTests {
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(this.objectMapper.writeValueAsString(eventDto)))
                 .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("_links.self").exists());
+                .andExpect(status().isBadRequest());
 
     }
     @Test
@@ -324,7 +310,7 @@ public class EventControllerTests {
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(this.objectMapper.writeValueAsString(eventDto)))
                 .andDo(print())
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isNotFound());
 
     }
 

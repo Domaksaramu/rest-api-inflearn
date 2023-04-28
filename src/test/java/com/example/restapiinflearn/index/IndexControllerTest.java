@@ -1,6 +1,7 @@
 package com.example.restapiinflearn.index;
 
 
+import com.example.restapiinflearn.common.BaseControllerTest;
 import com.example.restapiinflearn.common.RestDocsConfiguration;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,16 +18,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@RunWith(SpringRunner.class)
-//@WebMvcTest // 1.Web 관련 라이브러리만 Bean으로 등록해줌, SlicingTest
-@SpringBootTest
-@AutoConfigureMockMvc
-@AutoConfigureRestDocs
-@Import(RestDocsConfiguration.class)
-@ActiveProfiles("test")
-public class IndexControllerTest {
-    @Autowired
-    MockMvc mockMvc;
+public class IndexControllerTest extends BaseControllerTest {
 
     @Test
     public void index() throws Exception {

@@ -92,8 +92,9 @@ public class EventController {
         return ResponseEntity.ok(eventResource);
     }
     @PutMapping("/{id}")
-    public ResponseEntity updateEvent(@PathVariable Integer id, @RequestBody EventDto eventDto
-            , Errors errors) {
+    public ResponseEntity updateEvent(@PathVariable Integer id,
+                                      @RequestBody @Valid EventDto eventDto,
+                                      Errors errors) {
         Optional<Event> optionalEvent = this.eventRepository.findById(id);
         if (optionalEvent.isEmpty()) {
             return ResponseEntity.notFound().build();
