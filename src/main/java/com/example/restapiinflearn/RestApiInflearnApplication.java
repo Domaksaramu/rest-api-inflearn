@@ -11,8 +11,8 @@ public class RestApiInflearnApplication {
     public static void main(String[] args) {
         SpringApplication.run(RestApiInflearnApplication.class, args);
     }
-    @Bean
+    /*@Bean
     public ModelMapper modelMapper(){
         return new ModelMapper();
-    }
+    }*/
 }
